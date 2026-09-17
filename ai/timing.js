@@ -1,5 +1,6 @@
 export const REFERENCE_OBSTACLE_WIDTH = 17;
 export const SHORT_JUMP_LEAD_RATIO = 0.82;
+export const OBSTACLE_CENTERING_RATIO = 0.5;
 
 /**
  * Convert the original pixel threshold into a constant-time approach window.
@@ -30,8 +31,9 @@ export function calculateActionProximityThreshold({
     action === 'jump'
       ? Math.max(
           0,
-          (Number(obstacleWidth) || REFERENCE_OBSTACLE_WIDTH) -
-            REFERENCE_OBSTACLE_WIDTH
+          ((Number(obstacleWidth) || REFERENCE_OBSTACLE_WIDTH) -
+            REFERENCE_OBSTACLE_WIDTH) *
+            OBSTACLE_CENTERING_RATIO
         )
       : 0;
 

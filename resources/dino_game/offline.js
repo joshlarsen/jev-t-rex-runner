@@ -65,6 +65,7 @@ export class Runner {
    * defined in Runner.normalConfig and Runner.slowConfig.
    */
   static config = {
+    AI_ACTION_PROXIMITY_THRESHOLD: 140,
     AUDIOCUE_PROXIMITY_THRESHOLD: 190,
     AUDIOCUE_PROXIMITY_THRESHOLD_MOBILE_A11Y: 250,
     BG_CLOUD_SPEED: 0.2,
@@ -1674,7 +1675,7 @@ export class Runner {
    */
   getActionProximityThreshold(obstacle, action = 'jump', jumpProfile = 'full') {
     return calculateActionProximityThreshold({
-      baseThreshold: this.config.AUDIOCUE_PROXIMITY_THRESHOLD,
+      baseThreshold: this.config.AI_ACTION_PROXIMITY_THRESHOLD,
       baseSpeed: this.config.SPEED,
       currentSpeed: this.currentSpeed,
       dinosaurX: this.tRex?.xPos || 0,

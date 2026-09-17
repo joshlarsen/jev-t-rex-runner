@@ -7,11 +7,13 @@ import { FPS, IS_HIDPI } from './constants.js';
 export class HorizonLine {
   /**
    * Horizon Line.
-   * Consists of two connecting lines. Randomly assigns a flat / bumpy horizon.
+   * Consists of enough connecting lines to cover the viewport. Randomly assigns
+   * a flat / bumpy horizon.
    * @param {HTMLCanvasElement} canvas
    * @param {Object} lineConfig Configuration object.
+   * @param {number=} viewportWidth Logical width of the game viewport.
    */
-  constructor(canvas, lineConfig) {
+  constructor(canvas, lineConfig, viewportWidth = lineConfig.WIDTH) {
     let sourceX = lineConfig.SOURCE_X;
     let sourceY = lineConfig.SOURCE_Y;
 
@@ -28,15 +30,14 @@ export class HorizonLine {
     this.sourceDimensions = {};
     this.dimensions = lineConfig;
 
-    this.sourceXPos = [
-      this.spritePos.x,
-      this.spritePos.x + this.dimensions.WIDTH,
-    ];
+    this.sourceXPos = [];
     this.xPos = [];
     this.yPos = 0;
     this.bumpThreshold = 0.5;
+    this.viewportWidth = viewportWidth;
 
     this.setSourceDimensions(lineConfig);
+    this.reset(viewportWidth);
     this.draw();
   }
 
@@ -57,8 +58,27 @@ export class HorizonLine {
       }
     }
 
-    this.xPos = [0, newDimensions.WIDTH];
     this.yPos = newDimensions.YPOS;
+  }
+
+  /**
+   * Add enough sprite tiles to keep the ground under the full game viewport.
+   * The original game only needed two tiles because its canvas was 600px wide.
+   * @param {number} viewportWidth
+   */
+  ensureTileCoverage(viewportWidth) {
+    this.viewportWidth = viewportWidth;
+    const tileWidth = this.dimensions.WIDTH;
+    const requiredTiles = Math.max(2, Math.ceil(viewportWidth / tileWidth) + 1);
+
+    while (this.xPos.length < requiredTiles) {
+      const index = this.xPos.length;
+      const rightmostX = this.xPos.length ? Math.max(...this.xPos) : -tileWidth;
+      this.xPos.push(rightmostX + tileWidth);
+      this.sourceXPos.push(
+        this.spritePos.x + (index === 1 ? tileWidth : this.getRandomType())
+      );
+    }
   }
 
   /**
@@ -72,47 +92,18 @@ export class HorizonLine {
    * Draw the horizon line.
    */
   draw() {
-    this.canvasCtx.drawImage(
-      window.Runner.imageSprite,
-      this.sourceXPos[0],
-      this.spritePos.y,
-      this.sourceDimensions.WIDTH,
-      this.sourceDimensions.HEIGHT,
-      this.xPos[0],
-      this.yPos,
-      this.dimensions.WIDTH,
-      this.dimensions.HEIGHT
-    );
-
-    this.canvasCtx.drawImage(
-      window.Runner.imageSprite,
-      this.sourceXPos[1],
-      this.spritePos.y,
-      this.sourceDimensions.WIDTH,
-      this.sourceDimensions.HEIGHT,
-      this.xPos[1],
-      this.yPos,
-      this.dimensions.WIDTH,
-      this.dimensions.HEIGHT
-    );
-  }
-
-  /**
-   * Update the x position of an individual piece of the line.
-   * @param {number} pos Line position.
-   * @param {number} increment
-   */
-  updateXPos(pos, increment) {
-    const line1 = pos;
-    const line2 = pos === 0 ? 1 : 0;
-
-    this.xPos[line1] -= increment;
-    this.xPos[line2] = this.xPos[line1] + this.dimensions.WIDTH;
-
-    if (this.xPos[line1] <= -this.dimensions.WIDTH) {
-      this.xPos[line1] += this.dimensions.WIDTH * 2;
-      this.xPos[line2] = this.xPos[line1] - this.dimensions.WIDTH;
-      this.sourceXPos[line1] = this.getRandomType() + this.spritePos.x;
+    for (let i = 0; i < this.xPos.length; i++) {
+      this.canvasCtx.drawImage(
+        window.Runner.imageSprite,
+        this.sourceXPos[i],
+        this.spritePos.y,
+        this.sourceDimensions.WIDTH,
+        this.sourceDimensions.HEIGHT,
+        this.xPos[i],
+        this.yPos,
+        this.dimensions.WIDTH,
+        this.dimensions.HEIGHT
+      );
     }
   }
 
@@ -120,23 +111,32 @@ export class HorizonLine {
    * Update the horizon line.
    * @param {number} deltaTime
    * @param {number} speed
+   * @param {number=} viewportWidth Logical width of the game viewport.
    */
-  update(deltaTime, speed) {
+  update(deltaTime, speed, viewportWidth = this.viewportWidth) {
+    this.ensureTileCoverage(viewportWidth);
     const increment = Math.floor(speed * (FPS / 1000) * deltaTime);
 
-    if (this.xPos[0] <= 0) {
-      this.updateXPos(0, increment);
-    } else {
-      this.updateXPos(1, increment);
+    for (let i = 0; i < this.xPos.length; i++) {
+      this.xPos[i] -= increment;
     }
+
+    for (let i = 0; i < this.xPos.length; i++) {
+      while (this.xPos[i] <= -this.dimensions.WIDTH) {
+        this.xPos[i] = Math.max(...this.xPos) + this.dimensions.WIDTH;
+        this.sourceXPos[i] = this.getRandomType() + this.spritePos.x;
+      }
+    }
+
     this.draw();
   }
 
   /**
    * Reset horizon to the starting position.
    */
-  reset() {
-    this.xPos[0] = 0;
-    this.xPos[1] = this.dimensions.WIDTH;
+  reset(viewportWidth = this.viewportWidth) {
+    this.xPos = [];
+    this.sourceXPos = [];
+    this.ensureTileCoverage(viewportWidth);
   }
 }

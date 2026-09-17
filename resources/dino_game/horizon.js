@@ -60,7 +60,11 @@ export class Horizon {
     // Multiple Horizon lines
     for (let i = 0; i < window.Runner.spriteDefinition.LINES.length; i++) {
       this.horizonLines.push(
-        new HorizonLine(this.canvas, window.Runner.spriteDefinition.LINES[i])
+        new HorizonLine(
+          this.canvas,
+          window.Runner.spriteDefinition.LINES[i],
+          this.dimensions.WIDTH
+        )
       );
     }
 
@@ -139,7 +143,11 @@ export class Horizon {
     this.horizonLines = [];
     for (let i = 0; i < window.Runner.spriteDefinition.LINES.length; i++) {
       this.horizonLines.push(
-        new HorizonLine(this.canvas, window.Runner.spriteDefinition.LINES[i])
+        new HorizonLine(
+          this.canvas,
+          window.Runner.spriteDefinition.LINES[i],
+          this.dimensions.WIDTH
+        )
       );
     }
     this.reset();
@@ -161,7 +169,11 @@ export class Horizon {
     }
 
     for (let i = 0; i < this.horizonLines.length; i++) {
-      this.horizonLines[i].update(deltaTime, currentSpeed);
+      this.horizonLines[i].update(
+        deltaTime,
+        currentSpeed,
+        this.dimensions.WIDTH
+      );
     }
 
     if (!this.altGameModeActive || window.Runner.spriteDefinition.HAS_CLOUDS) {
@@ -354,7 +366,7 @@ export class Horizon {
   reset() {
     this.obstacles = [];
     for (let l = 0; l < this.horizonLines.length; l++) {
-      this.horizonLines[l].reset();
+      this.horizonLines[l].reset(this.dimensions.WIDTH);
     }
 
     this.nightMode.reset();

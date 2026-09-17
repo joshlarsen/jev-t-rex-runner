@@ -1,13 +1,23 @@
 {
   "name": "trex-runner-game",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
+  "main": "server.mjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "author": "Devfolio Engineering <engineering@devfolio.co> (https://devfolio.co)",
   "license": "BSD-3-Clause",
   "homepage": "https://github.com/devfolioco/t-rex-runner-game#readme",
   "bugs": "https://github.com/devfolioco/t-rex-runner-game/issues",
-  "description": "Latest T-Rex Runner Game ES6 Source Code extracted from Chromium"
+  "description": "Chrome T-Rex Runner controlled by TypeSafe Jev",
+  "dependencies": {
+    "@typesafe-ai/sdk": "0.6.0",
+    "express": "5.2.1"
+  }
 }

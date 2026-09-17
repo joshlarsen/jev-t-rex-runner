@@ -1,7 +1,3 @@
-/* ---------------------------CUSTOM STYLING---------------------------- */
-
-/* Dino Font by Devfolio */
-
 @font-face {
   font-family: 'OnchainDino';
   src: url('extra/OnchainDino-Regular.woff2') format('woff2');
@@ -9,102 +5,550 @@
   font-style: normal;
 }
 
-.trex-game {
-  max-width: 600px;
-  width: 100%;
+:root {
+  color-scheme: light dark;
+  --background: #f4f1e8;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-strong: #fffdf7;
+  --text: #20241f;
+  --muted: #6b7168;
+  --border: rgba(32, 36, 31, 0.14);
+  --accent: #ff5d36;
+  --accent-dark: #c63c1d;
+  --green: #1d7c5a;
+  --shadow: 0 22px 60px rgba(61, 52, 36, 0.14);
 }
 
-.trex-game .runner-container {
-  transition: all 0.3s;
+* {
+  box-sizing: border-box;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: OnchainDino;
-  text-transform: uppercase;
-  color: rgb(122, 122, 122);
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(
+      circle at 10% 0%,
+      rgba(255, 196, 98, 0.28),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 90% 15%,
+      rgba(255, 93, 54, 0.14),
+      transparent 30%
+    ),
+    var(--background);
+  color: var(--text);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+button,
+select,
+input {
+  font: inherit;
 }
 
 .container {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  gap: 32px;
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 56px 0 28px;
 }
 
 .header {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  max-width: 760px;
+  margin-bottom: 30px;
 }
 
-.config-box {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: center;
-  font-family: OnchainDino;
+.eyebrow,
+.panel-kicker,
+.section-label {
+  margin: 0;
+  color: var(--accent-dark);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgb(122, 122, 122);
 }
 
-.flex-box {
+h1,
+h2 {
+  margin: 0;
+  font-family: OnchainDino, ui-monospace, monospace;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin-top: 7px;
+  font-size: clamp(2.35rem, 7vw, 5.3rem);
+  line-height: 0.95;
+}
+
+h2 {
+  margin-top: 3px;
+  font-size: 1.35rem;
+}
+
+.subtitle {
+  max-width: 600px;
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.game-column,
+.control-panel {
+  min-width: 0;
+}
+
+.game-frame,
+.control-panel {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+}
+
+.game-frame {
+  position: relative;
+  min-height: 250px;
   display: flex;
-  gap: 48px;
-  justify-content: space-between;
+  align-items: center;
+  padding: 36px 28px;
+  overflow: hidden;
 }
 
-/* Mobile Screen */
-@media screen and (max-width: 768px) {
-  .flex-box {
-    flex-direction: column;
-    gap: 24px;
+.game-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), #ffbe55);
+}
+
+.trex-game {
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
+}
+
+.trex-game .runner-container {
+  transition: opacity 0.2s;
+}
+
+.decision-overlay {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: none;
+  gap: 6px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-strong);
+  box-shadow: 0 8px 22px rgba(30, 28, 20, 0.14);
+  font-size: 0.78rem;
+  text-transform: capitalize;
+}
+
+#overlay-action {
+  font-weight: 800;
+}
+
+#overlay-meta {
+  color: var(--muted);
+}
+
+.game-hint,
+footer {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.game-hint {
+  margin: 12px 8px 0;
+}
+
+.control-panel {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(0, 3fr) minmax(
+      150px,
+      0.7fr
+    );
+  grid-template-areas:
+    'heading controls action'
+    'telemetry telemetry telemetry';
+  column-gap: 20px;
+  padding: 22px;
+}
+
+.panel-heading {
+  grid-area: heading;
+  align-self: center;
+}
+
+.panel-heading h2 {
+  margin-bottom: 4px;
+}
+
+.judgment-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.status-pill {
+  max-width: 170px;
+  padding: 7px 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(107, 113, 104, 0.12);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-pill[data-type='acted'],
+.status-pill[data-type='decided'],
+.status-pill[data-type='running'],
+.status-pill[data-type='ready'] {
+  background: rgba(29, 124, 90, 0.12);
+  color: var(--green);
+}
+
+.status-pill[data-type='error'],
+.status-pill[data-type='crashed'],
+.status-pill[data-type='skipped'] {
+  background: rgba(198, 60, 29, 0.12);
+  color: var(--accent-dark);
+}
+
+.controls-grid {
+  grid-area: controls;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.controls-grid label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-strong);
+  color: var(--text);
+}
+
+.toggle-row {
+  grid-template-columns: auto 1fr !important;
+  align-content: center;
+  align-items: center;
+  min-height: 40px;
+  margin-top: 21px;
+}
+
+.toggle-row input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent);
+}
+
+.primary-button {
+  grid-area: action;
+  align-self: start;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 21px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  box-shadow: 0 9px 20px rgba(255, 93, 54, 0.24);
+}
+
+.primary-button:hover:not(:disabled) {
+  background: var(--accent-dark);
+}
+
+.primary-button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.7);
+  opacity: 0.55;
+}
+
+.telemetry-panel {
+  grid-area: telemetry;
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr 1.2fr 1fr;
+  margin-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.telemetry-section {
+  min-width: 0;
+  padding: 18px;
+  border-right: 1px solid var(--border);
+  border-bottom: 0;
+}
+
+.telemetry-section:first-child {
+  padding-left: 0;
+}
+
+.telemetry-section:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+
+.summary-section,
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+}
+
+.summary-section div,
+.stats-grid div {
+  display: grid;
+  gap: 3px;
+}
+
+.summary-section span,
+.stats-grid span,
+#confidence-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.summary-section strong,
+.stats-grid strong {
+  overflow: hidden;
+  font-size: 0.88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.latest-section {
+  display: grid;
+  gap: 10px;
+}
+
+.judgment-row strong {
+  text-transform: capitalize;
+}
+
+.judgment-row span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.confidence-track {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(107, 113, 104, 0.14);
+}
+
+.confidence-track span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffbe55, var(--green));
+  transition: width 0.25s ease;
+}
+
+#confidence-label {
+  margin: 0;
+}
+
+.probabilities {
+  display: grid;
+  gap: 5px;
+}
+
+.probabilities div {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: capitalize;
+}
+
+pre {
+  max-height: 185px;
+  margin: 10px 0 0;
+  padding: 12px;
+  overflow: auto;
+  border-radius: 10px;
+  background: rgba(32, 36, 31, 0.06);
+  color: var(--text);
+  font-size: 0.7rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+footer {
+  max-width: 720px;
+  margin-top: 22px;
+  line-height: 1.5;
+}
+
+body[data-view='overlay'] .telemetry-panel,
+body[data-view='minimal'] .telemetry-panel {
+  display: none;
+}
+
+body[data-view='overlay'] .decision-overlay {
+  display: flex;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #141713;
+    --surface: rgba(28, 32, 27, 0.86);
+    --surface-strong: #222720;
+    --text: #f6f2e7;
+    --muted: #abb2a7;
+    --border: rgba(246, 242, 231, 0.12);
+    --accent-dark: #ff7a58;
+    --shadow: 0 22px 60px rgba(0, 0, 0, 0.3);
   }
 }
 
-.flex-item {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
+@media (max-width: 980px) {
+  .container {
+    padding-top: 34px;
+  }
+
+  .control-panel {
+    grid-template-columns: minmax(0, 1fr) minmax(150px, 0.3fr);
+    grid-template-areas:
+      'heading action'
+      'controls controls'
+      'telemetry telemetry';
+  }
+
+  .panel-heading {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .primary-button {
+    margin-top: 0;
+  }
+
+  .controls-grid {
+    margin-top: 18px;
+  }
+
+  .telemetry-panel {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .telemetry-section {
+    padding: 18px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .telemetry-section:nth-child(odd) {
+    padding-left: 0;
+    border-right: 1px solid var(--border);
+  }
+
+  .telemetry-section:nth-child(even) {
+    padding-right: 0;
+  }
+
+  .telemetry-section:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
 }
 
-.flex-item input {
-  width: 180px;
-}
+@media (max-width: 640px) {
+  .container {
+    width: min(100% - 20px, 1180px);
+  }
 
-.onchain-cta {
-  background-color: transparent;
-  border: none;
-  outline: none;
-  margin-top: 32px;
-  margin-bottom: 16px;
-  cursor: pointer;
-}
+  .game-frame,
+  .control-panel {
+    border-radius: 15px;
+  }
 
-.onchain-cta:active {
-  scale: 0.95;
-}
+  .game-frame {
+    min-height: 210px;
+    padding: 24px 12px;
+  }
 
-.link-section {
-  margin-top: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  justify-content: center;
-  align-items: center;
-}
+  .control-panel {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'heading'
+      'controls'
+      'action'
+      'telemetry';
+  }
 
-a {
-  font-size: 16px;
-  color: rgb(122, 122, 122);
-}
+  .controls-grid {
+    grid-template-columns: 1fr;
+  }
 
-a:active {
-  scale: 0.95;
+  .toggle-row {
+    margin-top: 0;
+  }
+
+  .primary-button {
+    margin-top: 14px;
+  }
+
+  .telemetry-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .telemetry-section,
+  .telemetry-section:first-child,
+  .telemetry-section:last-child,
+  .telemetry-section:nth-child(odd),
+  .telemetry-section:nth-child(even) {
+    padding: 18px 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .telemetry-section:last-child {
+    border-bottom: 0;
+  }
 }

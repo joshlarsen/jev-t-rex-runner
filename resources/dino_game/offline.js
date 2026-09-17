@@ -276,6 +276,8 @@ export class Runner {
     this.msPerFrame = 1000 / FPS;
     this.currentSpeed = this.config.SPEED;
     Runner.slowDown = false;
+    this.speedMode = 'normal';
+    this.humanInputEnabled = true;
 
     this.obstacles = [];
 
@@ -1123,6 +1125,10 @@ export class Runner {
    * @param {Event} e
    */
   onKeyDown(e) {
+    if (!this.humanInputEnabled) {
+      return;
+    }
+
     // Prevent native page scrolling whilst tapping on mobile.
     if (IS_MOBILE && this.playing) {
       e.preventDefault();
@@ -1163,31 +1169,17 @@ export class Runner {
             if (isMobileMouseInput) {
               this.handleCanvasKeyPress(e);
             }
-            this.loadSounds();
-            this.setPlayStatus(true);
-            this.update();
+            this.startRun();
             if (window.errorPageController) {
               errorPageController.trackEasterEgg();
             }
+            return;
           }
           // Start jump.
-          if (!this.tRex.jumping && !this.tRex.ducking) {
-            if (Runner.audioCues) {
-              this.generatedSoundFx.cancelFootSteps();
-            } else {
-              this.playSound(this.soundFx.BUTTON_PRESS);
-            }
-            this.tRex.startJump(this.currentSpeed);
-          }
+          this.jump();
         } else if (this.playing && Runner.keycodes.DUCK[e.keyCode]) {
           e.preventDefault();
-          if (this.tRex.jumping) {
-            // Speed drop, activated only when jump key is not pressed.
-            this.tRex.setSpeedDrop();
-          } else if (!this.tRex.jumping && !this.tRex.ducking) {
-            // Duck.
-            this.tRex.setDuck(true);
-          }
+          this.setDuck(true);
         }
       }
     }
@@ -1198,6 +1190,10 @@ export class Runner {
    * @param {Event} e
    */
   onKeyUp(e) {
+    if (!this.humanInputEnabled) {
+      return;
+    }
+
     const keyCode = String(e.keyCode);
     const isjumpKey =
       Runner.keycodes.JUMP[keyCode] ||
@@ -1538,6 +1534,140 @@ export class Runner {
       this.touchController.classList.toggle(HIDDEN_CLASS, !isPlaying);
     }
     this.playing = isPlaying;
+  }
+
+  /**
+   * Start the first run from a UI control or AI controller.
+   */
+  startRun() {
+    if (this.crashed) {
+      this.restart();
+      return;
+    }
+    if (this.playing || !this.tRex) {
+      return;
+    }
+
+    if (!this.audioContext) {
+      this.loadSounds();
+    }
+    this.setPlayStatus(true);
+    this.update();
+    this.jump();
+  }
+
+  /** Start a jump if the current game state permits it. */
+  jump() {
+    if (
+      !this.playing ||
+      this.crashed ||
+      this.paused ||
+      this.tRex.jumping ||
+      this.tRex.ducking
+    ) {
+      return false;
+    }
+
+    if (Runner.audioCues) {
+      this.generatedSoundFx.cancelFootSteps();
+    } else {
+      this.playSound(this.soundFx.BUTTON_PRESS);
+    }
+    this.tRex.startJump(this.currentSpeed);
+    return true;
+  }
+
+  /**
+   * Duck on the ground or speed-drop while airborne.
+   * @param {boolean} isDucking
+   */
+  setDuck(isDucking) {
+    if (!this.tRex || this.crashed) {
+      return false;
+    }
+    if (!isDucking) {
+      this.tRex.speedDrop = false;
+      this.tRex.setDuck(false);
+      return true;
+    }
+    if (!this.playing || this.paused) {
+      return false;
+    }
+    if (this.tRex.jumping) {
+      this.tRex.setSpeedDrop();
+    } else if (!this.tRex.ducking) {
+      this.tRex.setDuck(true);
+    }
+    return true;
+  }
+
+  /** @param {boolean} enabled */
+  setHumanInputEnabled(enabled) {
+    this.humanInputEnabled = Boolean(enabled);
+  }
+
+  /**
+   * Change speed profiles between attempts.
+   * @param {'normal'|'slow'} mode
+   */
+  setSpeedMode(mode) {
+    if ((mode !== 'normal' && mode !== 'slow') || this.playing) {
+      return false;
+    }
+
+    this.speedMode = mode;
+    Runner.slowDown = mode === 'slow';
+    const updatedConfig = Runner.slowDown
+      ? Runner.slowConfig
+      : Runner.normalConfig;
+    Runner.config = Object.assign(Runner.config, updatedConfig);
+    this.config = Runner.config;
+    this.currentSpeed = updatedConfig.SPEED;
+    this.tRex?.setSpeedMode(mode);
+    this.horizon?.setSpeedMode(mode);
+    return true;
+  }
+
+  /** Return the state exposed to the AI controller and telemetry UI. */
+  getAiSnapshot() {
+    const dinosaurMotion = this.tRex?.jumping
+      ? 'jumping'
+      : this.tRex?.ducking
+        ? 'ducking'
+        : 'running';
+
+    return {
+      playing: this.playing,
+      crashed: this.crashed,
+      paused: this.paused,
+      score: Math.ceil(this.distanceRan),
+      speed: this.currentSpeed,
+      speedMode: this.speedMode,
+      dinosaurMotion,
+      dinosaur: this.tRex
+        ? {
+            xPos: this.tRex.xPos,
+            yPos: this.tRex.yPos,
+            width: this.tRex.config.WIDTH,
+          }
+        : null,
+      obstacles: (this.horizon?.obstacles || []).map(obstacle => ({
+        type: obstacle.typeConfig.type,
+        size: obstacle.size,
+        xPos: obstacle.xPos,
+        yPos: obstacle.yPos,
+        width: obstacle.width,
+        height: obstacle.typeConfig.height,
+      })),
+    };
+  }
+
+  /** Speed-adjusted proximity used for AI action timing. */
+  getActionProximityThreshold() {
+    const threshold = this.config.AUDIOCUE_PROXIMITY_THRESHOLD;
+    return (
+      threshold + threshold * Math.log10(this.currentSpeed / this.config.SPEED)
+    );
   }
 
   /**

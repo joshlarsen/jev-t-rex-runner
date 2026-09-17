@@ -55,7 +55,7 @@ export class Horizon {
    * Initialise the horizon. Just add the line and a cloud. No obstacles.
    */
   init() {
-    Obstacle.types = spriteDefinitionByType.original.OBSTACLES;
+    this.setSpeedMode(window.Runner.slowDown ? 'slow' : 'normal');
     this.addCloud();
     // Multiple Horizon lines
     for (let i = 0; i < window.Runner.spriteDefinition.LINES.length; i++) {
@@ -75,19 +75,44 @@ export class Horizon {
    * Update obstacle definitions based on the speed of the game.
    */
   adjustObstacleSpeed() {
-    for (let i = 0; i < Obstacle.types.length; i++) {
-      if (window.Runner.slowDown) {
-        Obstacle.types[i].multipleSpeed = Obstacle.types[i].multipleSpeed / 2;
-        Obstacle.types[i].minGap *= 1.5;
-        Obstacle.types[i].minSpeed = Obstacle.types[i].minSpeed / 2;
+    this.setSpeedMode(window.Runner.slowDown ? 'slow' : 'normal');
+  }
 
-        // Convert variable y position obstacles to fixed.
-        if (typeof Obstacle.types[i].yPos === 'object') {
-          Obstacle.types[i].yPos = Obstacle.types[i].yPos[0];
-          Obstacle.types[i].yPosMobile = Obstacle.types[i].yPos[0];
+  /**
+   * Rebuild obstacle definitions from their immutable sprite definitions.
+   * @param {'normal'|'slow'} mode
+   */
+  setSpeedMode(mode) {
+    const source = this.altGameModeActive
+      ? window.Runner.spriteDefinition.OBSTACLES
+      : spriteDefinitionByType.original.OBSTACLES;
+    const isSlow = mode === 'slow';
+
+    Obstacle.types = source.map(type => {
+      const nextType = {
+        ...type,
+        yPos: Array.isArray(type.yPos) ? [...type.yPos] : type.yPos,
+        yPosMobile: Array.isArray(type.yPosMobile)
+          ? [...type.yPosMobile]
+          : type.yPosMobile,
+      };
+
+      if (isSlow) {
+        nextType.multipleSpeed /= 2;
+        nextType.minGap *= 1.5;
+        nextType.minSpeed /= 2;
+        if (Array.isArray(nextType.yPos)) {
+          nextType.yPos = nextType.yPos[0];
+          nextType.yPosMobile = nextType.yPos;
         }
       }
-    }
+
+      return nextType;
+    });
+
+    this.gapCoefficient = isSlow
+      ? window.Runner.slowConfig.GAP_COEFFICIENT
+      : window.Runner.normalConfig.GAP_COEFFICIENT;
   }
 
   /**
@@ -102,7 +127,6 @@ export class Horizon {
     this.altGameModeActive = true;
     this.spritePos = spritePos;
 
-    Obstacle.types = window.Runner.spriteDefinition.OBSTACLES;
     this.adjustObstacleSpeed();
 
     Obstacle.MAX_GAP_COEFFICIENT =

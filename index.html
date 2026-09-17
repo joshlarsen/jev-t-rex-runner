@@ -8,50 +8,114 @@
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#fff" />
 
-    <title>Trex Runner Game</title>
+    <title>Jev Plays Dino Runner</title>
     <link rel="stylesheet" href="trex.css" />
     <link rel="stylesheet" href="custom.css" />
   </head>
-  <body class="">
+  <body data-view="full">
     <div class="container">
       <div class="header">
-        <h1>T-Rex Runner Game</h1>
-        <h4>( SPACE to Start - Press 'F' to go fullscreen )</h4>
+        <p class="eyebrow">TypeSafe System One</p>
+        <h1>Jev Plays Dino Runner</h1>
+        <p class="subtitle">
+          One model judgment per obstacle.
+        </p>
       </div>
 
-      <!-- Game Instance -->
-      <div class="trex-game"></div>
-
-      <!-- Advance Configs -->
-      <div class="config-box">
-        <a
-          href="https://ethindia2024.devfolio.co?dino=true"
-          class="onchain-cta"
-        >
-          <img src="extra/onchain-button.svg" alt="Play Onchain Dino Game" />
-        </a>
-
-        <h4>Developer Options</h4>
-        <div class="flex-box">
-          <div class="flex-item">
-            <label for="sprite-1x">1x Sprite:</label>
-            <input type="file" id="sprite-1x" accept="image/*" />
+      <main class="demo-grid">
+        <section class="game-column" aria-label="T-Rex game">
+          <div class="game-frame">
+            <div class="trex-game"></div>
+            <div class="decision-overlay" aria-live="polite">
+              <span id="overlay-action">Waiting</span>
+              <span id="overlay-meta">—</span>
+            </div>
           </div>
-          <div class="flex-item">
-            <label for="sprite-2x">2x Sprite:</label>
-            <input type="file" id="sprite-2x" accept="image/*" />
-          </div>
-        </div>
+          <p class="game-hint" id="game-hint">
+            Manual mode: press Space or ↑ to jump and ↓ to duck.
+          </p>
+        </section>
 
-        <div class="link-section">
-          <a href="https://github.com/devfolioco/t-rex-runner-game">
-            VIEW GITHUB REPOSITORY
-          </a>
-          <a href="https://devfolio.co/hackathons" target="_blank">
-            Apply to a hackathon on Devfolio
-          </a>
-        </div>
-      </div>
+        <aside class="control-panel" aria-label="AI controls and telemetry">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Controller</p>
+              <h2>Dino cockpit</h2>
+            </div>
+            <span class="status-pill" id="status-pill">Manual</span>
+          </div>
+
+          <div class="controls-grid">
+            <label>
+              Control
+              <select id="control-mode">
+                <option value="manual">Manual</option>
+                <option value="ai">Jev AI</option>
+              </select>
+            </label>
+            <label>
+              Speed
+              <select id="speed-mode">
+                <option value="normal">Normal</option>
+                <option value="slow">Slow</option>
+              </select>
+            </label>
+            <label>
+              Display
+              <select id="display-mode">
+                <option value="full">Full panel</option>
+                <option value="overlay">Overlay</option>
+                <option value="minimal">Minimal</option>
+              </select>
+            </label>
+            <label class="toggle-row">
+              <input id="auto-restart" type="checkbox" disabled />
+              <span>Auto-restart</span>
+            </label>
+          </div>
+
+          <button class="primary-button" id="start-button" type="button">
+            Start run
+          </button>
+
+          <div class="telemetry-panel">
+            <section class="telemetry-section summary-section">
+              <div><span>API</span><strong id="api-status">Checking…</strong></div>
+              <div><span>Model</span><strong id="model-name">jev-latest</strong></div>
+              <div><span>Score</span><strong id="current-score">0</strong></div>
+              <div><span>Best</span><strong id="best-score">0</strong></div>
+            </section>
+
+            <section class="telemetry-section latest-section">
+              <p class="section-label">Latest judgment</p>
+              <div class="judgment-row">
+                <strong id="latest-action">No decision yet</strong>
+                <span id="latest-latency">— ms</span>
+              </div>
+              <div class="confidence-track" aria-label="Choice confidence">
+                <span id="confidence-bar"></span>
+              </div>
+              <p id="confidence-label">Confidence —</p>
+              <div class="probabilities" id="probabilities"></div>
+            </section>
+
+            <section class="telemetry-section">
+              <p class="section-label">State sent to Jev</p>
+              <pre id="jev-state">Waiting for an obstacle…</pre>
+            </section>
+
+            <section class="telemetry-section stats-grid">
+              <div><span>Attempts</span><strong id="attempts">0</strong></div>
+              <div><span>Crashes</span><strong id="crashes">0</strong></div>
+              <div><span>Acted</span><strong id="acted">0</strong></div>
+              <div><span>Skipped</span><strong id="skipped">0</strong></div>
+              <div><span>Errors</span><strong id="errors">0</strong></div>
+              <div><span>Avg latency</span><strong id="average-latency">—</strong></div>
+              <div><span>Input tokens</span><strong id="input-tokens">—</strong></div>
+            </section>
+          </div>
+        </aside>
+      </main>
     </div>
 
     <!-- Resources for the Trex Game -->

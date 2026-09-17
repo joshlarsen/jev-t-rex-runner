@@ -1,4 +1,27 @@
 # T-Rex Runner from Chromium 2024
+
+## Jev AI demo
+
+This copy can be played manually or controlled by TypeSafe's Jev model. Jev
+chooses one semantic maneuver (`jump`, `duck`, or `keep_running`) for each new
+obstacle. The browser keeps ownership of frame timing, collision geometry, and
+input execution.
+
+Requirements: Node.js 20 or newer and a TypeSafe API key.
+
+```sh
+npm install
+cp .env.example .env
+# Set TYPESAFE_API_KEY in .env, then:
+node --env-file=.env server.mjs
+```
+
+Open `http://127.0.0.1:3000`. The API key is read only by the local Node server
+and is never included in browser code. Without a key, manual mode remains fully
+usable and the UI reports that AI mode is unavailable.
+
+Run the automated checks with `npm test`.
+
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->

@@ -30,7 +30,7 @@ export class Trex {
     this.animStartTime = 0;
     this.timer = 0;
     this.msPerFrame = 1000 / FPS;
-    this.config = Object.assign(Trex.config, Trex.normalJumpConfig);
+    this.config = { ...Trex.config, ...Trex.normalJumpConfig };
     // Current status.
     this.status = Trex.status.WAITING;
     this.jumping = false;
@@ -66,12 +66,17 @@ export class Trex {
    * Assign the appropriate jump parameters based on the game speed.
    */
   enableSlowConfig() {
-    const jumpConfig = window.Runner.slowDown
-      ? Trex.slowJumpConfig
-      : Trex.normalJumpConfig;
-    Trex.config = Object.assign(Trex.config, jumpConfig);
+    this.setSpeedMode(window.Runner.slowDown ? 'slow' : 'normal');
+  }
 
-    this.adjustAltGameConfigForSlowSpeed();
+  /**
+   * Apply a jump profile without mutating the shared base configuration.
+   * @param {'normal'|'slow'} mode
+   */
+  setSpeedMode(mode) {
+    const jumpConfig =
+      mode === 'slow' ? Trex.slowJumpConfig : Trex.normalJumpConfig;
+    this.config = { ...Trex.config, ...jumpConfig };
   }
 
   /**
@@ -103,9 +108,9 @@ export class Trex {
 
     // Update Trex config
     Trex.config.GRAVITY = spriteDefinition.GRAVITY || Trex.config.GRAVITY;
-    (Trex.config.HEIGHT = spriteDefinition.RUNNING_1.h),
+    ((Trex.config.HEIGHT = spriteDefinition.RUNNING_1.h),
       (Trex.config.INITIAL_JUMP_VELOCITY =
-        spriteDefinition.INITIAL_JUMP_VELOCITY);
+        spriteDefinition.INITIAL_JUMP_VELOCITY));
     Trex.config.MAX_JUMP_HEIGHT = spriteDefinition.MAX_JUMP_HEIGHT;
     Trex.config.MIN_JUMP_HEIGHT = spriteDefinition.MIN_JUMP_HEIGHT;
     Trex.config.WIDTH = spriteDefinition.RUNNING_1.w;

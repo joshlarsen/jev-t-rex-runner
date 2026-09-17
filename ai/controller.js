@@ -217,7 +217,17 @@ export class AiController {
     }
 
     const latencyMs = Math.round(this.now() - plan.requestedAt);
-    plan.decision = { ...decision, latencyMs };
+    const shortJumpIsSafe =
+      plan.state?.obstacle?.kind === 'small_cactus' &&
+      plan.state?.obstacle?.group === 'single';
+    const effectiveJumpProfile =
+      decision.action === 'jump' &&
+      decision.jumpProfile === 'short' &&
+      decision.jumpProfileConfidence >= CONFIDENCE_THRESHOLD &&
+      shortJumpIsSafe
+        ? 'short'
+        : 'full';
+    plan.decision = { ...decision, effectiveJumpProfile, latencyMs };
     this.latestDecision = plan.decision;
     this.stats.decisions += 1;
     this.stats.latencyTotal += latencyMs;
@@ -236,7 +246,11 @@ export class AiController {
     plan.status = 'ready';
     this.latestStatus = {
       type: 'decided',
-      message: `Jev chose ${decision.action.replaceAll('_', ' ')}`,
+      message: `Jev chose ${
+        decision.action === 'jump'
+          ? `${effectiveJumpProfile} jump`
+          : decision.action.replaceAll('_', ' ')
+      }`,
     };
   }
 
@@ -258,7 +272,6 @@ export class AiController {
   }
 
   executePlans(snapshot) {
-    const threshold = this.runner.getActionProximityThreshold();
     const dinosaurX = snapshot.dinosaur?.xPos || 0;
 
     for (const [obstacleId, plan] of this.plans) {
@@ -271,6 +284,14 @@ export class AiController {
         this.plans.delete(obstacleId);
         continue;
       }
+
+      const action = plan.decision?.action || 'jump';
+      const jumpProfile = plan.decision?.effectiveJumpProfile || 'full';
+      const threshold = this.runner.getActionProximityThreshold(
+        plan.obstacle,
+        action,
+        jumpProfile
+      );
 
       if (plan.obstacle.xPos > threshold) {
         continue;
@@ -292,13 +313,30 @@ export class AiController {
         continue;
       }
 
-      const { action } = plan.decision;
       let applied = true;
       if (action === 'jump') {
-        applied = this.runner.jump();
+        applied = this.runner.jump(jumpProfile);
+        if (!applied) {
+          this.latestStatus = {
+            type: 'waiting',
+            message: `Waiting to execute ${jumpProfile} jump`,
+          };
+          continue;
+        }
         plan.status = 'executed';
       } else if (action === 'duck') {
+        if (snapshot.dinosaurMotion === 'jumping') {
+          this.runner.setDuck(true);
+          this.latestStatus = {
+            type: 'waiting',
+            message: 'Landing before ducking',
+          };
+          continue;
+        }
         applied = this.runner.setDuck(true);
+        if (!applied) {
+          continue;
+        }
         plan.status = 'ducking';
       } else {
         plan.status = 'executed';
@@ -308,7 +346,11 @@ export class AiController {
       this.latestStatus = {
         type: 'acted',
         message: applied
-          ? `Executed ${action.replaceAll('_', ' ')}`
+          ? `Executed ${
+              action === 'jump'
+                ? `${jumpProfile} jump`
+                : action.replaceAll('_', ' ')
+            }`
           : `${action.replaceAll('_', ' ')} was already satisfied`,
       };
     }

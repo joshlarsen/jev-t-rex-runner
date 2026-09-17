@@ -10,6 +10,7 @@ import { FPS, IS_HIDPI, IS_IOS, IS_MOBILE, IS_RTL } from './constants.js';
 import { DistanceMeter } from './distance_meter.js';
 import { GameOverPanel } from './game_over_panel.js';
 import { GeneratedSoundFx } from './generated_sound_fx.js';
+import { calculateActionProximityThreshold } from '../../ai/timing.js';
 import { Horizon } from './horizon.js';
 import { Obstacle } from './obstacle.js';
 import {
@@ -1556,8 +1557,11 @@ export class Runner {
     this.jump();
   }
 
-  /** Start a jump if the current game state permits it. */
-  jump() {
+  /**
+   * Start a jump if the current game state permits it.
+   * @param {'short'|'full'} profile
+   */
+  jump(profile = 'full') {
     if (
       !this.playing ||
       this.crashed ||
@@ -1573,7 +1577,7 @@ export class Runner {
     } else {
       this.playSound(this.soundFx.BUTTON_PRESS);
     }
-    this.tRex.startJump(this.currentSpeed);
+    this.tRex.startJump(this.currentSpeed, profile);
     return true;
   }
 
@@ -1662,12 +1666,22 @@ export class Runner {
     };
   }
 
-  /** Speed-adjusted proximity used for AI action timing. */
-  getActionProximityThreshold() {
-    const threshold = this.config.AUDIOCUE_PROXIMITY_THRESHOLD;
-    return (
-      threshold + threshold * Math.log10(this.currentSpeed / this.config.SPEED)
-    );
+  /**
+   * Speed- and geometry-adjusted proximity used for AI action timing.
+   * @param {Object=} obstacle
+   * @param {'jump'|'duck'|'keep_running'} action
+   * @param {'short'|'full'} jumpProfile
+   */
+  getActionProximityThreshold(obstacle, action = 'jump', jumpProfile = 'full') {
+    return calculateActionProximityThreshold({
+      baseThreshold: this.config.AUDIOCUE_PROXIMITY_THRESHOLD,
+      baseSpeed: this.config.SPEED,
+      currentSpeed: this.currentSpeed,
+      dinosaurX: this.tRex?.xPos || 0,
+      obstacleWidth: obstacle?.width,
+      action,
+      jumpProfile,
+    });
   }
 
   /**

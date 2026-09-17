@@ -11,6 +11,7 @@ const validRequest = {
   runId: 'run-1',
   obstacleId: 'obstacle-1',
   state: {
+    speed: 6,
     speedMode: 'normal',
     dinosaurMotion: 'running',
     obstacle: {
@@ -44,6 +45,11 @@ test('maps a TypeSafe Choice response onto the public response', async () => {
             confidence: 0.91,
             probabilities: { jump: 0.04, duck: 0.94, keep_running: 0.02 },
           },
+          jump_profile: {
+            choice: 'short',
+            confidence: 0.82,
+            probabilities: { short: 0.9, full: 0.1 },
+          },
         },
         usage: { input_tokens: 87, output_tokens: 0 },
       };
@@ -58,9 +64,43 @@ test('maps a TypeSafe Choice response onto the public response', async () => {
     'blocks_running_only'
   );
   assert.equal(captured.questions.maneuver.type, 'choice');
+  assert.equal(captured.questions.jump_profile.type, 'choice');
   assert.equal(response.action, 'duck');
+  assert.equal(response.jumpProfile, 'short');
+  assert.equal(response.jumpProfileConfidence, 0.82);
   assert.equal(response.model, 'jev-1.13.0');
   assert.equal(response.runId, validRequest.runId);
+});
+
+test('rejects invalid game speed and jump profile responses', async () => {
+  const invalidSpeed = structuredClone(validRequest);
+  invalidSpeed.state.speed = Number.NaN;
+  assert.match(validateDecisionRequest(invalidSpeed).join(' '), /state.speed/);
+
+  const service = createDecisionService({
+    client: {
+      async systemOne() {
+        return {
+          answers: {
+            maneuver: {
+              choice: 'jump',
+              confidence: 0.9,
+              probabilities: {},
+            },
+            jump_profile: {
+              choice: 'medium',
+              confidence: 0.9,
+              probabilities: {},
+            },
+          },
+        };
+      },
+    },
+  });
+
+  await assert.rejects(service.decide(validRequest), {
+    code: 'invalid_typesafe_response',
+  });
 });
 
 test('normalizes missing configuration and rate limits', async () => {

@@ -65,7 +65,10 @@ window.addEventListener('load', () => {
       : 'Manual mode: press Space or ↑ to jump and ↓ to duck.';
 
     if (decision) {
-      const action = decision.action.replaceAll('_', ' ');
+      const action =
+        decision.action === 'jump'
+          ? `${decision.effectiveJumpProfile || 'full'} jump`
+          : decision.action.replaceAll('_', ' ');
       const confidence = Math.round(decision.confidence * 100);
       elements.latestAction.textContent = action;
       elements.latestLatency.textContent = `${decision.latencyMs} ms`;

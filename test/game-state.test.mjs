@@ -36,11 +36,13 @@ test('normalizes every original obstacle path into semantic state', () => {
 
 test('builds the compact TypeSafe request state', () => {
   const state = buildDecisionState(obstacle('CACTUS_LARGE', 90, 3), {
+    speed: 4.2,
     speedMode: 'slow',
     dinosaurMotion: 'running',
   });
 
   assert.deepEqual(state, {
+    speed: 4.2,
     speedMode: 'slow',
     dinosaurMotion: 'running',
     obstacle: {

@@ -4,8 +4,9 @@
 
 This copy can be played manually or controlled by TypeSafe's Jev model. Jev
 chooses one semantic maneuver (`jump`, `duck`, or `keep_running`) for each new
-obstacle. The browser keeps ownership of frame timing, collision geometry, and
-input execution.
+obstacle and selects a `short` or `full` jump profile when jumping. The browser
+keeps ownership of speed-aware frame timing, collision geometry, adaptive duck
+duration, and input execution.
 
 Requirements: Node.js 20 or newer and a TypeSafe API key.
 
@@ -23,7 +24,9 @@ usable and the UI reports that AI mode is unavailable.
 Run the automated checks with `npm test`.
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 This is the latest version of the T-Rex Runner source code, extracted from the newly migrated Chromium repository. We have enhanced it further to make it independent of the Chromium browser and to improve the overall code structure. This is the latest codebase written in ES6, free from the circular dependencies present in the original source, making it easy to integrate into modern frameworks like React, Next.js, and others. Below, you’ll find updated documentation to help you start editing the game and creating your own customized variant.

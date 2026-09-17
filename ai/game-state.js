@@ -21,6 +21,7 @@ export function describeFlightPath(obstacle) {
 
 export function buildDecisionState(obstacle, snapshot) {
   return {
+    speed: Number(snapshot.speed.toFixed(2)),
     speedMode: snapshot.speedMode,
     dinosaurMotion: snapshot.dinosaurMotion,
     obstacle: {

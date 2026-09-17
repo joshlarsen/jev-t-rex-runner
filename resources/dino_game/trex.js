@@ -37,6 +37,7 @@ export class Trex {
     this.ducking = false;
     this.jumpVelocity = 0;
     this.reachedMinHeight = false;
+    this.jumpProfile = 'full';
     this.speedDrop = false;
     this.jumpCount = 0;
     this.jumpspotX = 0;
@@ -77,6 +78,9 @@ export class Trex {
     const jumpConfig =
       mode === 'slow' ? Trex.slowJumpConfig : Trex.normalJumpConfig;
     this.config = { ...Trex.config, ...jumpConfig };
+    this.minJumpHeight = this.config.INVERT_JUMP
+      ? this.groundYPos + this.config.MIN_JUMP_HEIGHT
+      : this.groundYPos - this.config.MIN_JUMP_HEIGHT;
   }
 
   /**
@@ -345,19 +349,21 @@ export class Trex {
   /**
    * Initialise a jump.
    * @param {number} speed
+   * @param {'short'|'full'} profile
    */
-  startJump(speed) {
+  startJump(speed, profile = 'full') {
     if (!this.jumping) {
       this.update(0, Trex.status.JUMPING);
       // Tweak the jump velocity based on the speed.
       this.jumpVelocity = this.config.INITIAL_JUMP_VELOCITY - speed / 10;
       this.jumping = true;
       this.reachedMinHeight = false;
+      this.jumpProfile = profile === 'short' ? 'short' : 'full';
       this.speedDrop = false;
 
-      if (this.config.INVERT_JUMP) {
-        this.minJumpHeight = this.groundYPos + this.config.MIN_JUMP_HEIGHT;
-      }
+      this.minJumpHeight = this.config.INVERT_JUMP
+        ? this.groundYPos + this.config.MIN_JUMP_HEIGHT
+        : this.groundYPos - this.config.MIN_JUMP_HEIGHT;
     }
   }
 
@@ -401,6 +407,10 @@ export class Trex {
       this.speedDrop
     ) {
       this.reachedMinHeight = true;
+    }
+
+    if (this.jumpProfile === 'short' && this.reachedMinHeight) {
+      this.endJump();
     }
 
     // Reached max height.
@@ -458,6 +468,7 @@ export class Trex {
     this.ducking = false;
     this.update(0, Trex.status.RUNNING);
     this.midair = false;
+    this.jumpProfile = 'full';
     this.speedDrop = false;
     this.jumpCount = 0;
   }

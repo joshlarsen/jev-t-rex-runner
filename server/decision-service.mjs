@@ -1,6 +1,7 @@
 import { choice, TypeSafeClient } from '@typesafe-ai/sdk';
 
 export const ACTIONS = ['jump', 'duck', 'keep_running'];
+export const JUMP_PROFILES = ['short', 'full'];
 export const SPEED_MODES = ['normal', 'slow'];
 export const DINOSAUR_MOTIONS = ['running', 'jumping', 'ducking'];
 export const OBSTACLE_KINDS = ['small_cactus', 'large_cactus', 'pterodactyl'];
@@ -16,6 +17,9 @@ const MANEUVER_QUESTION = choice(
   [
     'Choose the single safest maneuver for the dinosaur to avoid',
     'the target obstacle and continue running.',
+    'The dinosaur motion in the state is only what it was doing when the',
+    'distant obstacle was first observed; do not assume that motion will',
+    'still be active when the obstacle arrives.',
     'Choose only the maneuver type. Browser code will handle the exact timing.',
   ].join(' '),
   {
@@ -30,6 +34,24 @@ const MANEUVER_QUESTION = choice(
     keep_running: [
       'Keep running without jumping or ducking when the obstacle safely clears',
       'the running dinosaur.',
+    ].join(' '),
+  }
+);
+
+const JUMP_PROFILE_QUESTION = choice(
+  [
+    'Assume the safest maneuver is to jump.',
+    'Choose the jump trajectory that best clears the target obstacle.',
+    'Browser code will calculate the exact launch time from the game speed.',
+  ].join(' '),
+  {
+    short: [
+      'Use only for one small cactus.',
+      'Do not use for a large cactus, grouped cacti, or a pterodactyl.',
+    ].join(' '),
+    full: [
+      'Use maximum safe airtime for every large cactus, grouped cactus,',
+      'pterodactyl, or uncertain obstacle.',
     ].join(' '),
   }
 );
@@ -60,6 +82,16 @@ export function validateDecisionRequest(body) {
 
   if (!isEnum(state.speedMode, SPEED_MODES)) {
     errors.push(`state.speedMode must be one of: ${SPEED_MODES.join(', ')}.`);
+  }
+  if (
+    typeof state.speed !== 'number' ||
+    !Number.isFinite(state.speed) ||
+    state.speed <= 0 ||
+    state.speed > 50
+  ) {
+    errors.push(
+      'state.speed must be a finite number greater than 0 and at most 50.'
+    );
   }
   if (!isEnum(state.dinosaurMotion, DINOSAUR_MOTIONS)) {
     errors.push(
@@ -94,6 +126,7 @@ export function validateDecisionRequest(body) {
 function buildModelState(state) {
   return {
     objective: 'Avoid the target obstacle and keep the dinosaur alive.',
+    current_speed: state.speed,
     speed_mode: state.speedMode,
     dinosaur_motion_when_observed: state.dinosaurMotion,
     target_obstacle: {
@@ -102,7 +135,7 @@ function buildModelState(state) {
       flight_path: state.obstacle.flightPath,
     },
     timing_policy:
-      'The browser controller will execute the chosen maneuver at the safe time.',
+      'The current motion is transient. The browser controller will finish it and execute the chosen maneuver at the safe time.',
   };
 }
 
@@ -137,11 +170,18 @@ export function createDecisionService({
       const response = await typesafeClient.systemOne({
         model,
         state: buildModelState(body.state),
-        questions: { maneuver: MANEUVER_QUESTION },
+        questions: {
+          maneuver: MANEUVER_QUESTION,
+          jump_profile: JUMP_PROFILE_QUESTION,
+        },
       });
       const answer = response.answers.maneuver;
+      const jumpProfileAnswer = response.answers.jump_profile;
 
-      if (!ACTIONS.includes(answer.choice)) {
+      if (
+        !ACTIONS.includes(answer.choice) ||
+        !JUMP_PROFILES.includes(jumpProfileAnswer?.choice)
+      ) {
         const error = new Error('TypeSafe returned an unsupported action.');
         error.code = 'invalid_typesafe_response';
         error.status = 502;
@@ -155,6 +195,9 @@ export function createDecisionService({
         action: answer.choice,
         probabilities: answer.probabilities,
         confidence: answer.confidence,
+        jumpProfile: jumpProfileAnswer.choice,
+        jumpProfileProbabilities: jumpProfileAnswer.probabilities,
+        jumpProfileConfidence: jumpProfileAnswer.confidence,
         model: response.model,
         usage: response.usage,
       };
